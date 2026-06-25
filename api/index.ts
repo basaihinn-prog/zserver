@@ -3,7 +3,7 @@ import app from './app'
 import { websocketHandler } from './modules/websocket/websocket.handler'
 import wsRouter from './modules/websocket/websocket.router'
 
-const port = process.env.PORT
+const port = Number(process.env.PORT ?? 9999)
 
 console.log(`Server is running on http://localhost:${port}`)
 

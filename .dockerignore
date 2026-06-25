@@ -1,0 +1,12 @@
+.git
+node_modules
+api/node_modules
+dist
+api/dist
+.env
+.env.*
+!.env.example
+.DS_Store
+coverage
+.nyc_output
+*.log

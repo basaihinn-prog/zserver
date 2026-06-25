@@ -1,76 +1,35 @@
-# fly.toml app configuration file generated for tiny-pg-app-asdf-1234 on 2025-08-15T08:44:42-05:00
-#
-# See https://fly.io/docs/reference/configuration/ for information about how to use this file.
-#
-
-app = 'tiny-pg-app-asdf-1234'
+app = 'cashflowcasino'
 primary_region = 'dfw'
 
+[build]
+  dockerfile = 'Dockerfile'
+
 [env]
-  PRIMARY_REGION = 'dfw'
+  NODE_ENV = 'production'
+  PORT = '8080'
 
-[[mounts]]
-  source = 'pg_data'
-  destination = '/data'
+[http_service]
+  internal_port = 8080
+  force_https = true
+  auto_stop_machines = 'stop'
+  auto_start_machines = true
+  min_machines_running = 1
+  processes = ['app']
 
-[[services]]
-  protocol = 'tcp'
-  internal_port = 5432
-  auto_start_machines = false
+  [http_service.concurrency]
+    type = 'requests'
+    soft_limit = 200
+    hard_limit = 250
 
-  [[services.ports]]
-    port = 5432
-    handlers = ['pg_tls']
-
-  [services.concurrency]
-    type = 'connections'
-    hard_limit = 1000
-    soft_limit = 1000
-
-[[services]]
-  protocol = 'tcp'
-  internal_port = 5433
-  auto_start_machines = false
-
-  [[services.ports]]
-    port = 5433
-    handlers = ['pg_tls']
-
-  [services.concurrency]
-    type = 'connections'
-    hard_limit = 1000
-    soft_limit = 1000
+[[vm]]
+  memory = '1gb'
+  cpu_kind = 'shared'
+  cpus = 1
 
 [checks]
-  [checks.pg]
-    port = 5500
+  [checks.api]
+    port = 8080
     type = 'http'
     interval = '15s'
     timeout = '10s'
-    path = '/flycheck/pg'
-
-  [checks.role]
-    port = 5500
-    type = 'http'
-    interval = '15s'
-    timeout = '10s'
-    path = '/flycheck/role'
-
-  [checks.vm]
-    port = 5500
-    type = 'http'
-    interval = '15s'
-    timeout = '10s'
-    path = '/flycheck/vm'
-
-[[metrics]]
-  port = 9187
-  path = '/metrics'
-  
-[[services]]
-  internal_port = 5432
-  protocol = "tcp"
-
-  [[services.ports]]
-    handlers = ["tls"]
-    port = 5432
+    path = '/api/'

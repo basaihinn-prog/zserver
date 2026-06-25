@@ -159,6 +159,10 @@ modules.forEach((route) => {
 
 app.route('/gs2c/ge/v3/gameService/', gameService)
 
+// Serve the built Vite frontend when the Docker image contains ./dist.
+app.use('/*', serveStatic({ root: './dist' }))
+app.get('*', serveStatic({ path: './dist/index.html' }))
+
 export type AppType = (typeof modules)[number]
 
 // Function to download OpenAPI specification

@@ -1,147 +1,61 @@
-#!/bin/bash
+#!/usr/bin/env bash
+set -Eeuo pipefail
 
-# Production Deployment Script for cocodr.xyz Migration
-# This script handles build optimization, environment setup, and deployment
+APP_NAME="${FLY_APP_NAME:-cashflowcasino}"
+IMAGE_NAME="${DOCKER_IMAGE_NAME:-cashflowcasino:latest}"
+RUN_MIGRATIONS="${RUN_MIGRATIONS:-0}"
+SKIP_DEPLOY="${SKIP_DEPLOY:-0}"
 
-set -e  # Exit on any error
+info() { printf '\033[0;32m[INFO]\033[0m %s\n' "$*"; }
+warn() { printf '\033[1;33m[WARN]\033[0m %s\n' "$*"; }
+fail() { printf '\033[0;31m[ERROR]\033[0m %s\n' "$*" >&2; exit 1; }
+need() { command -v "$1" >/dev/null 2>&1 || fail "Missing required command: $1"; }
 
-echo "🚀 Starting production deployment for cocodr.xyz"
+info "Starting production deployment pipeline for ${APP_NAME}"
+need bun
 
-# Colors for output
-RED='\033[0;31m'
-GREEN='\033[0;32m'
-YELLOW='\033[1;33m'
-NC='\033[0m' # No Color
-
-# Function to print colored output
-print_status() {
-    echo -e "${GREEN}[INFO]${NC} $1"
-}
-
-print_warning() {
-    echo -e "${YELLOW}[WARN]${NC} $1"
-}
-
-print_error() {
-    echo -e "${RED}[ERROR]${NC} $1"
-}
-
-# Check if .env file exists
-if [ ! -f ".env" ]; then
-    print_error ".env file not found. Please create it from .env.example"
-    exit 1
+if [[ ! -f package.json || ! -f api/package.json ]]; then
+  fail "Run this script from the repository root."
 fi
 
-# Set production environment
-export NODE_ENV=production
+info "Installing locked dependencies"
+bun install --frozen-lockfile
+( cd api && bun install --frozen-lockfile )
 
-print_status "Setting production environment variables..."
-# Override development values with production ones
-export VITE_API_BASE_URL="https://api.cocodr.xyz"
-export VITE_WS_URL="wss://apidev.cocodr.xyz"
+info "Running static checks"
+bun run type-check
 
-# Install dependencies if needed
-print_status "Installing dependencies..."
-if command -v bun &> /dev/null; then
-    bun install
-elif command -v npm &> /dev/null; then
-    npm install
+if [[ "${RUN_MIGRATIONS}" == "1" ]]; then
+  info "Running database migrations"
+  bun run migrate
 else
-    print_error "Neither bun nor npm found"
-    exit 1
+  warn "Skipping migrations. Set RUN_MIGRATIONS=1 to run them before deploy."
 fi
 
-# Run database migrations
-print_status "Running database migrations..."
-if command -v bun &> /dev/null; then
-    bun run db:migrate
-elif command -v npm &> /dev/null; then
-    npm run db:migrate
-fi
+info "Building frontend assets"
+bun run build
 
-# Build optimizations
-print_status "Building application with optimizations..."
-if command -v bun &> /dev/null; then
-    bun run build
-elif command -v npm &> /dev/null; then
-    npm run build
-fi
-
-# Build API
-print_status "Building API..."
-cd api
-if command -v bun &> /dev/null; then
-    bun run build
-elif command -v npm &> /dev/null; then
-    npm run build
-fi
-cd ..
-
-# Docker build if Dockerfile exists
-if [ -f "Dockerfile" ]; then
-    print_status "Building Docker image..."
-    docker build -t casino-app:latest .
-fi
-
-# Deploy to Fly.io if fly CLI is available
-if command -v fly &> /dev/null; then
-    print_status "Deploying to Fly.io..."
-    fly deploy
+if command -v docker >/dev/null 2>&1; then
+  info "Building Docker image ${IMAGE_NAME}"
+  docker build -t "${IMAGE_NAME}" .
 else
-    print_warning "Fly CLI not found. Manual deployment required."
+  warn "Docker is not installed; skipping local image build."
 fi
 
-# Health check function
-health_check() {
-    local url=$1
-    local max_attempts=10
-    local attempt=1
+if [[ "${SKIP_DEPLOY}" == "1" ]]; then
+  warn "SKIP_DEPLOY=1 set; deployment skipped after verification."
+  exit 0
+fi
 
-    print_status "Performing health check on $url..."
+need fly
+info "Deploying to Fly.io app ${APP_NAME}"
+fly deploy --app "${APP_NAME}" --remote-only
 
-    while [ $attempt -le $max_attempts ]; do
-        if curl -f -s "$url" > /dev/null 2>&1; then
-            print_status "✅ Health check passed for $url"
-            return 0
-        fi
-
-        print_warning "Health check attempt $attempt/$max_attempts failed. Retrying in 10 seconds..."
-        sleep 10
-        ((attempt++))
-    done
-
-    print_error "❌ Health check failed for $url after $max_attempts attempts"
-    return 1
-}
-
-# Wait for deployment to be ready
-print_status "Waiting for deployment to stabilize..."
-sleep 30
-
-# Perform health checks
-health_check "https://app.cocodr.xyz"
-health_check "https://api.cocodr.xyz"
-
-# Additional checks
-print_status "Checking API endpoints..."
-if curl -f -s "https://api.cocodr.xyz/api/health" > /dev/null 2>&1; then
-    print_status "✅ API health endpoint responding"
+info "Checking deployed API index"
+if command -v curl >/dev/null 2>&1; then
+  curl --fail --silent --show-error "https://${APP_NAME}.fly.dev/api/" >/dev/null
 else
-    print_warning "⚠️ API health endpoint not accessible (may not be implemented)"
+  warn "curl is not installed; skipping deployed health check."
 fi
 
-print_status "🎉 Deployment completed successfully!"
-print_status "Verify the application at: https://app.cocodr.xyz"
-print_status "API available at: https://api.cocodr.xyz"
-
-# Optional: Run tests if available
-if [ -f "package.json" ] && grep -q '"test"' package.json; then
-    print_status "Running tests..."
-    if command -v bun &> /dev/null; then
-        bun test || print_warning "Tests failed, but deployment continued"
-    elif command -v npm &> /dev/null; then
-        npm test || print_warning "Tests failed, but deployment continued"
-    fi
-fi
-
-print_status "Deployment script completed."
+info "Deployment completed successfully."
