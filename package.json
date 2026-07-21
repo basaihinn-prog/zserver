@@ -68,6 +68,7 @@
     "@varlet/touch-emulator": "3.11.1",
     "@varlet/ui": "3.11.1",
     "@varlet/use": "3.11.1",
+    "@vercel/analytics": "^2.0.1",
     "@vueuse/core": "^12.7.0",
     "@vueuse/router": "^13.6.0",
     "amazing-grace": "^2.0.2",
