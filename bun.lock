@@ -1,5 +1,6 @@
 {
   "lockfileVersion": 1,
+  "configVersion": 0,
   "workspaces": {
     "": {
       "name": "varlet-app-template",
@@ -26,6 +27,7 @@
         "@varlet/touch-emulator": "3.11.1",
         "@varlet/ui": "3.11.1",
         "@varlet/use": "3.11.1",
+        "@vercel/speed-insights": "^2.0.0",
         "@vueuse/core": "^12.7.0",
         "@vueuse/router": "^13.6.0",
         "amazing-grace": "^2.0.2",
@@ -1045,6 +1047,8 @@
     "@varlet/use": ["@varlet/use@3.11.1", "", { "dependencies": { "@varlet/shared": "3.11.1" }, "peerDependencies": { "vue": "^3.2.0" } }, "sha512-jjov0/DEXZfLAnMuhE/EVc29P+phRr49tu8Ud8yj65n7K5z/rH1yCC3lQdu5kYHFIk8pYWIHh3kWYea+CrrRiw=="],
 
     "@varlet/webfont": ["@varlet/webfont@0.0.9", "", { "dependencies": { "@varlet/shared": "^3.2.10", "fs-extra": "^11.2.0", "globby": "^11.0.0", "p-limit": "^3.1.0", "svg2ttf": "^6.0.2", "svgicons2svgfont": "^10.0.3", "xml2js": "^0.4.23" } }, "sha512-CIDVrfyzKC20D/ig4lQKXGcKwRlvtgzi/Hzb7YkOBMx4EwwHlGcRRAVBzzDNkFBFtSNUa+IwScvLim8UlcoipQ=="],
+
+    "@vercel/speed-insights": ["@vercel/speed-insights@2.0.0", "", { "peerDependencies": { "@sveltejs/kit": "^1 || ^2", "next": ">= 13", "nuxt": ">= 3", "react": "^18 || ^19 || ^19.0.0-rc", "svelte": ">= 4", "vue": "^3", "vue-router": "^4" }, "optionalPeers": ["@sveltejs/kit", "next", "nuxt", "react", "svelte", "vue", "vue-router"] }, "sha512-jwkNcrTeafWxjmWq4AHBaptSqZiJkYU5adLC9QBSqeim0GcqDMgN5Ievh8OG1rJ6W3A4l1oiP7qr9CWxGuzu3w=="],
 
     "@vitejs/plugin-vue": ["@vitejs/plugin-vue@5.2.4", "", { "peerDependencies": { "vite": "^5.0.0 || ^6.0.0", "vue": "^3.2.25" } }, "sha512-7Yx/SXSOcQq5HiiV3orevHUFn+pmMB4cgbEkDYgnkUWb0WfeQ/wa2yFv6D5ICiCQOVpjA7vYDXrC7AGO8yjDHA=="],
 
